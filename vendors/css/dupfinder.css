@@ -1,0 +1,12 @@
+.dupMaster,
+.dupCopy,
+.dupNone {
+  margin: 2px;
+  padding: 3px;
+}
+.dupMaster {
+  background-color: #bfc;
+}
+.dupCopy {
+  background-color: #fbc;
+}

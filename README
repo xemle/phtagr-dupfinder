@@ -1,0 +1,4 @@
+DupFinder Plugin for phTagr.
+
+This plugin searches for duplicate media and merges multiple copies to a master
+media. Currently the duplicate criteria is the media date.
