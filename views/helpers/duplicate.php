@@ -22,7 +22,7 @@
  */
 
 class DuplicateHelper extends AppHelper {
-  var $helpers = array('time', 'ajax', 'html', 'form', 'query');
+  var $helpers = array('time', 'ajax', 'html', 'form');
 
  function _radio($index, $mediaId, $value, $checked = false) {
     $output = '<input type="radio" name="data['.$index.']['.$mediaId.']" ';
