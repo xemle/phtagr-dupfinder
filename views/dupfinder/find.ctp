@@ -32,9 +32,14 @@
 <table>
   <?php 
   $size = $imageData->getimagesize($media);
+  $files = array();
+  foreach ($media['File'] as $file) {
+    $files[] = $file['file'].' ('.$number->toReadableSize($file['size']).')';
+  }
   echo $html->tableCells(array(
   array('Date:', $media['Media']['date']),
   array('Size:', $size[0].'x'.$size[1]),
+  array('Files:', implode(', ',$files)),
   array('Clicks:', $media['Media']['clicks']),
   array('Comments:', count($media['Comment'])),
   array('Tags:', implode(', ', Set::extract($media, '/Tag/name'))),
