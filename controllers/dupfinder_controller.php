@@ -25,7 +25,7 @@ class DupfinderController extends DupfinderAppController
 {
   var $name = 'Dupfinder';
   var $uses = array('Media');
-  var $helpers = array('imageData', 'duplicate');
+  var $helpers = array('imageData', 'duplicate', 'number');
 
   function beforeFilter() {
     if (!$this->hasRole(ROLE_USER)) {
