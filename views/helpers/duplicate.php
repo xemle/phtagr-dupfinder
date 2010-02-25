@@ -22,26 +22,40 @@
  */
 
 class DuplicateHelper extends AppHelper {
-  var $helpers = array('time', 'ajax', 'html', 'form');
 
- function _radio($index, $mediaId, $value, $checked = false) {
-    $output = '<input type="radio" name="data['.$index.']['.$mediaId.']" ';
-    $output .= 'id="dup.'.$index.'.'.$mediaId.'" ';
-    $output .= 'value="'.$value.'" ';
-    if ($checked) {
-      $output .= 'checked="checked" ';
-    }
-    $output .= 'onchange="dupSelectDuplicate('.$index.','.$mediaId.');" '; 
-    $output .= '/>';
-    return $output;
-  }
+  var $helpers = array('form');
 
-  function selectType($index, $media) {
+  function selectDuplicate($index, $media) {
+    $mediaId = $media['Media']['id'];
     $output = '';
-    $output .= $this->_radio($index, $media['Media']['id'], 'master', $media['dupMaster']).' Master';
-    $output .= $this->_radio($index, $media['Media']['id'], 'copy', !$media['dupMaster']).' Copy';
-    $output .= $this->_radio($index, $media['Media']['id'], 'none', false).' None';
+    $output .= $this->form->radio(
+      "Set$index.Dup.$mediaId",
+      array('master' => 'Master', 'copy' => 'Copy', 'none' => 'None'),
+      array(
+        'onchange' => "dupSelectDuplicate('$index', '$mediaId');",
+        'legend' => false,
+        'label' => false,
+        'default' => $media['dupMaster'] ? 'master' : 'copy'
+        )
+      );
     return $output;
   }
+
+  function selectFile($index, $media) {
+    $mediaId = $media['Media']['id'];
+    $output = '';
+    $output .= $this->form->radio(
+      "Set$index.File.$mediaId",
+      array('master' => 'File Master', 'copy' => 'File Copy'),
+      array(
+        'onchange' => "dupSelectFile('$index', '$mediaId');",
+        'legend' => false,
+        'label' => false,
+        'default' => $media['fileMaster'] ? 'master' : 'copy'
+        )
+      );
+    return $output;
+  }
+
 }
 ?>

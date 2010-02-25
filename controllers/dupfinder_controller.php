@@ -24,7 +24,7 @@
 class DupfinderController extends DupfinderAppController
 {
   var $name = 'Dupfinder';
-  var $uses = array('Media');
+  var $uses = array('Media', 'MyFile');
   var $helpers = array('imageData', 'duplicate', 'number');
 
   function beforeFilter() {
@@ -66,8 +66,40 @@ class DupfinderController extends DupfinderAppController
     if (count($this->data) == 0) {
       $this->render('noduplicates');
     } else {
-      $this->Media->getMaster(&$this->data);
+      $this->Media->getMaster(&$this->data, 'views');
     }
+  }
+
+  /** Extract master and copies of the submitted form and validate the input
+   @param data Duplicate data set
+   @return array of master Id and copy Ids */
+  function _findMasterAndCopies($data) {
+    $masters = array();
+    $copies = array(); 
+    foreach ($data as $id => $type) {
+      if ($type == 'master') {
+        $masters[] = $id;
+      } elseif ($type == 'copy') {
+        $copies[] = $id;
+      }
+    }
+ 
+    // check master and copies
+    if (count($masters) == 0) {
+      Logger::verbose("No master selected for duplicates set");
+      Logger::debug($data);
+      return array(false, false);
+    } elseif (count($masters) > 1) {
+      Logger::verbose("Deny multiple selected masters for duplicates set");
+      Logger::debug($data);
+      return array(false, false);
+    } elseif (count($copies) < 1) {
+      Logger::verbose("No copy selected for duplicates set");
+      Logger::debug($data);
+      return array(false, false);
+    }
+    $master = array_pop($masters);
+    return array($master, $copies);
   }
 
   function merge() {
@@ -75,47 +107,62 @@ class DupfinderController extends DupfinderAppController
     $data['copies'] = 0;
     if (!empty($this->data)) {
       foreach($this->data as $dupIndex => $duplicates) {
-        // select master and copies
-        $masters = array();
-        $copies = array(); 
-        foreach ($duplicates as $id => $type) {
-          if ($type == 'master') {
-            $masters[] = $id;
-          } elseif ($type == 'copy') {
-            $copies[] = $id;
-          }
-        }
-        // check master and copies
-        if (count($masters) == 0) {
-          Logger::verbose("No master selected for duplicates set $dupIndex");
-          Logger::debug($duplicates);
-          continue;
-        } elseif (count($masters) > 1) {
-          Logger::verbose("Deny multiple selected masters for duplicates set $dupIndex");
-          Logger::debug($duplicates);
-          continue;
-        } elseif (count($copies) < 0) {
-          Logger::verbose("No copy selected for duplicates set $dupIndex");
-          Logger::debug($duplicates);
+        // select master and copies of a duplicate set
+        list($masterId, $copies) = $this->_findMasterAndCopies($duplicates['Dup']);
+        list($fileMasterId, $fileCopies) = $this->_findMasterAndCopies($duplicates['File']);
+
+        if (!$masterId || !$fileMasterId) {
+          Logger::err("No masterId or file masterId found for duplicate set $dupIndex");
           continue;
         }
 
-        $masterId = array_pop($masters);
         $master = $this->Media->findById($masterId);
         if (!$master) {
           Logger::verbose("Could not find master with id $masterId");
           continue;
         }
+
+        // Merge meta data from copies to master
         foreach ($copies as $copyId) {
           $copy = $this->Media->findById($copyId);
           if (!$copy) {
             Logger::verbose("Could not find copy with id $copyId");
             continue;
           }
-          Logger::verbose("Merge media $copyId to $masterId and delete media $copyId");
+          Logger::verbose("Merge media $copyId to $masterId");
           $this->Media->merge($copy, $master);
-          $this->Media->delete($copy['Media']['id']);
+
           $data['copies']++;
+        }
+
+        // Apply file master to media master
+        if ($fileMasterId != $masterId) {
+          $fileMaster = $this->Media->findById($fileMasterId);
+          if (!$fileMaster) {
+            Logger::verbose("Could not find file master with id $fileMasterId");
+          } else {
+            // Use name of file master name if name is equal to one of media's file name
+            if (in_array($master['Media']['name'], Set::extract('/File/file', $master))) {
+              $this->Media->id = $masterId;
+              $this->Media->saveField('name', $fileMaster['Media']['name']);
+              Logger::verbose("Rename media master from {$master['Media']['name']} to {$fileMaster['Media']['name']}");
+            }
+
+            Logger::verbose("Unlink files of media master $masterId");
+            $this->MyFile->unlinkMedia($masterId);
+            Logger::verbose("Set files " . implode(', ', Set::extract('/File/id', $fileMaster)) . " of file master $fileMasterId to master media $masterId");
+            foreach ($fileMaster['File'] as $file) {
+              $this->MyFile->setMedia($file, $masterId);              
+            }
+             
+            $this->Media->deleteCache($master);
+          }
+        }
+
+        // Delete Media copies
+        Logger::verbose("Delete media copies " . implode(', ', $copies));
+        foreach ($copies as $copyId) {
+          $this->Media->delete($copyId);
         }
         $data['master']++;
       }

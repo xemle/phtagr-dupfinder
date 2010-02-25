@@ -18,14 +18,18 @@
 
 <div class="image">
 <?php $size = $imageData->getimagesize($media, OUTPUT_SIZE_THUMB); ?>
-<a href="/images/view/<?php echo $media['Media']['id']; ?>">
-<img src="/media/thumb/<?php echo $media['Media']['id']; ?>" <?php echo $size[3]; ?> alt="<?php echo $media['Media']['name']; ?>" />
+<a href="<?php echo Router::url('/images/view/' . $media['Media']['id']); ?>">
+<img src="<?php echo Router::url('/media/thumb/' . $media['Media']['id']); ?>" <?php echo $size[3]; ?> alt="<?php echo $media['Media']['name']; ?>" />
 </a>
 </div> <!-- image -->
 
 <div class="user">
-  <?php echo $duplicate->selectType($dupIndex, $media)."\n"; ?>
+  <?php echo $duplicate->selectDuplicate($dupIndex, $media)."\n"; ?>
 </div>
+<div class="user">
+  <?php echo $duplicate->selectFile($dupIndex, $media)."\n"; ?>
+</div>
+
 
 <div class="meta">
 <div id="<?php echo 'meta-'.$media['Media']['id']; ?>">

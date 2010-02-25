@@ -13,7 +13,6 @@ var dupSelectRadio = function(name, value) {
   } 
 };
 
-
 var dupChangeCssClass = function(id, type) {
   var e = document.getElementById(id);
   if (!e) {
@@ -38,7 +37,7 @@ var dupSelectDuplicate = function(dupIndex, mediaId) {
     return true;
   }
   // prefix of duplicate group
-  var prefix = 'data[' + dupIndex + ']';
+  var prefix = 'Set' + dupIndex + 'Dup';
   // active radio buttons of the duplicates
   var duplicates = [];
   // the current selected radio button
@@ -48,10 +47,11 @@ var dupSelectDuplicate = function(dupIndex, mediaId) {
   var elements = form.elements;
   for (var i in elements) {
     if (elements[i].type == 'radio' && 
-      elements[i].name.substr(0, prefix.length) == prefix &&
+      elements[i].id.substr(0, prefix.length) == prefix &&
       elements[i].checked == true) {
       duplicates.push(elements[i]);
-      if (elements[i].name == prefix + '[' + mediaId + ']') {
+      var pattern = new RegExp('^' + prefix + mediaId + '[MCN]');
+      if (elements[i].id.match(pattern)) {
         selected = elements[i];
       }
     }
@@ -64,9 +64,9 @@ var dupSelectDuplicate = function(dupIndex, mediaId) {
         if (duplicates[i] != selected &&
           duplicates[i].value == 'master') {
           dupSelectRadio(duplicates[i].name, 'copy');
-          var matches = duplicates[i].name.match(/[0-9]+\]$/);
-          if (matches.length == 1) {
-            var id = matches[0].substr(0, matches[0].length - 1);
+          var matches = duplicates[i].id.match(/Dup([0-9]+)\w+$/);
+          if (matches.length > 0) {
+            var id = matches[1];
             dupChangeCssClass('media-' + id, 'copy');
           }
         }
@@ -76,6 +76,47 @@ var dupSelectDuplicate = function(dupIndex, mediaId) {
       dupChangeCssClass('media-' + mediaId, 'copy');
     } else {
       dupChangeCssClass('media-' + mediaId, 'none');
+    }
+  }
+};
+
+var dupSelectFile = function(dupIndex, mediaId) {
+  var e = null;
+  var form = document.MergeForm;
+  if (!form) {
+    alert("Formular MergeForm could not be found");
+    return true;
+  }
+  // prefix of duplicate group
+  var prefix = 'Set' + dupIndex + 'File';
+  // active radio buttons of the duplicates
+  var files = [];
+  // the current selected radio button
+  var selected = null;
+
+  // fetch active radio buttons and the current element
+  var elements = form.elements;
+  for (var i in elements) {
+    if (elements[i].type == 'radio' && 
+      elements[i].id.substr(0, prefix.length) == prefix &&
+      elements[i].checked == true) {
+      files.push(elements[i]);
+      var pattern = new RegExp('^' + prefix + mediaId + '[MC]');
+      if (elements[i].id.match(pattern)) {
+        selected = elements[i];
+      }
+    }
+  }
+
+  if (selected) {
+    // change the old master to a copy
+    if (selected.value == 'master') {
+      for (var i in files) {
+        if (files[i] != selected &&
+          files[i].value == 'master') {
+          dupSelectRadio(files[i].name, 'copy');
+        }
+      }
     }
   }
 };

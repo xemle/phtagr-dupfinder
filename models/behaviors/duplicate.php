@@ -81,6 +81,9 @@ class DuplicateBehavior extends ModelBehavior
     @return Data with marked master. */
   function getMaster(&$model, &$data, $method = 'height') {
     switch ($method) {
+      case 'views':
+        $field = 'clicks';
+        break;
       case 'height':
         $field = "height";
         break;
@@ -92,6 +95,10 @@ class DuplicateBehavior extends ModelBehavior
     foreach ($data as $dupIndex => $duplicates) {
       $masterIndex = false;
       $masterValue = false;
+
+      $fileMasterIndex = false;
+      $fileMasterValue = false;
+
       // find master
       foreach ($duplicates as $index => $item) {
         // extract returns an array
@@ -100,6 +107,12 @@ class DuplicateBehavior extends ModelBehavior
           $masterIndex = $index;
           $masterValue = $value;
         }
+        
+        $size = array_sum(Set::extract("/File/size", $item));
+        if ($fileMasterIndex === false || $fileMasterValue < $size) {
+          $fileMasterIndex = $index;
+          $fileMasterValue = $size;
+        }     
       }
       // set master and their copies
       foreach ($duplicates as $index => $item) {
@@ -107,6 +120,12 @@ class DuplicateBehavior extends ModelBehavior
           $data[$dupIndex][$index]['dupMaster'] = true;
         } else {
           $data[$dupIndex][$index]['dupMaster'] = false;
+        }
+
+        if ($fileMasterIndex === $index) {
+          $data[$dupIndex][$index]['fileMaster'] = true;
+        } else {
+          $data[$dupIndex][$index]['fileMaster'] = false;
         }
       }
     }
