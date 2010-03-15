@@ -154,6 +154,18 @@ class DupfinderController extends DupfinderAppController
             foreach ($fileMaster['File'] as $file) {
               $this->MyFile->setMedia($file, $masterId);              
             }
+
+            // Overwrite media properties from file master to media master
+            $fieldList = array('width', 'height', 'flag', 'type', 'orientation', 'duration', 'aperture', 'shutter', 'iso', 'model');
+            $dummy = array('Media' => array('id' => $master['Media']['id']));
+            foreach ($fieldList as $field) {
+              $dummy['Media'][$field] = $fileMaster['Media'][$field];
+            }
+            if (!$this->Media->save($dummy, true, $fieldList)) {
+              Logger::err("Clould not save model data of {$master['Media']['id']}");
+            } else {
+              Logger::verbose("Overwrite media properties from file master {$fileMaster['Media']['id']} to media master {$master['Media']['id']}: ". implode(', ', $fieldList));
+            }
              
             $this->Media->deleteCache($master);
           }

@@ -69,7 +69,7 @@ class DuplicateBehavior extends ModelBehavior
     $duplicates = Set::extract($result, "{n}.{$model->alias}.$keyField");
     $result = array();
     foreach ($duplicates as $key) {
-      $result[] = $model->find('all', array('conditions' => array($keyName => $key)));
+      $result[] = $model->find('all', array('conditions' => array($keyName => $key), 'order' => 'Media.id ASC'));
     }
     return $result;
   }
