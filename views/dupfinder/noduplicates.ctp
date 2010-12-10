@@ -2,4 +2,4 @@
 
 <p>No duplicates where found according to your query.</p>
 
-<p>Make another <?php echo $html->link('search', 'index'); ?>.</p>
+<p>Make another <?php echo $html->link('search', array('action' => 'index')); ?>.</p>
