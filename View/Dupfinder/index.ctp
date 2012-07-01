@@ -7,13 +7,13 @@ kept.</p>
 
 <p>Please select your query</p>
 
-<?php echo $form->create(null, array('action' => 'find')); ?>
+<?php echo $this->Form->create(null, array('action' => 'find')); ?>
 <fieldset><legend>Range of date</legend>
-  <?php echo $form->input('Media.from', array('label' => 'From date')); ?>
-  <?php echo $form->input('Media.to', array('label' => 'To date')); ?>
+  <?php echo $this->Form->input('Media.from', array('label' => 'From date')); ?>
+  <?php echo $this->Form->input('Media.to', array('label' => 'To date')); ?>
 </fieldset>
 
 <fieldset><legend>Other</legend>
-  <?php echo $form->input('Media.show', array('label' => 'Page size')); ?>
+  <?php echo $this->Form->input('Media.show', array('label' => 'Page size')); ?>
 </fieldset>
-<?php echo $form->end("Find Duplicates"); ?>
+<?php echo $this->Form->end("Find Duplicates"); ?>

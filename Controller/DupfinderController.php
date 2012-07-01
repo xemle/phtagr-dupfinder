@@ -20,53 +20,53 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+App::uses('DupfinderAppController', 'Dupfinder.Controller');
 
-class DupfinderController extends DupfinderAppController
-{
+class DupfinderController extends DupfinderAppController {
   var $name = 'Dupfinder';
   var $uses = array('Media', 'MyFile');
-  var $helpers = array('imageData', 'dupfinder.duplicate', 'number');
+  var $helpers = array('ImageData', 'Dupfinder.Duplicate', 'Number');
 
   function beforeFilter() {
     if (!$this->hasRole(ROLE_USER)) {
       Logger::verbose("Deny plugin for non users");
       $this->redirect('/');
     }
-    $this->Media->Behaviors->attach('dupfinder.duplicate');
+    $this->Media->Behaviors->attach('Dupfinder.Duplicate');
   }
 
   function index() {
     if ($this->Session->check('dupFinder.index.data')) {
-      $this->data = $this->Session->read('dupFinder.index.data');
+      $this->request->data = $this->Session->read('dupFinder.index.data');
     }
   }
 
   function find() {
-    if (empty($this->data) && $this->Session->check('dupFinder.find.query')) {
+    if (empty($this->request->data) && $this->Session->check('dupFinder.find.query')) {
       $query = $this->Session->read('dupFinder.find.query');
     } else {
-      $this->Session->write('dupFinder.index.data', $this->data);
+      $this->Session->write('dupFinder.index.data', $this->request->data);
       $query = array('limit' => 12);
       $conditions = array("User.id = ".$this->getUserId());
-      if (!empty($this->data)) {
-        if (!empty($this->data['Media']['from'])) {
-          $conditions[] = "Media.date >= '".date('Y-m-d H:m:s', strtotime($this->data['Media']['from']))."'";
+      if (!empty($this->request->data)) {
+        if (!empty($this->request->data['Media']['from'])) {
+          $conditions[] = "Media.date >= '".date('Y-m-d H:m:s', strtotime($this->request->data['Media']['from']))."'";
         }    
-        if (!empty($this->data['Media']['to'])) {
-          $conditions[] = "Media.date <= '".date('Y-m-d H:m:s', strtotime($this->data['Media']['to']))."'";
+        if (!empty($this->request->data['Media']['to'])) {
+          $conditions[] = "Media.date <= '".date('Y-m-d H:m:s', strtotime($this->request->data['Media']['to']))."'";
         }    
-        if (!empty($this->data['Media']['show'])) {
-          $query['limit'] = min(240, max(3, intval($this->data['Media']['show'])));
+        if (!empty($this->request->data['Media']['show'])) {
+          $query['limit'] = min(240, max(3, intval($this->request->data['Media']['show'])));
         }    
       } 
       $query['conditions'] = $conditions;
       $this->Session->write('dupFinder.find.query', $query);
     }
-    $this->data = $this->Media->findDup('date', $query);
-    if (count($this->data) == 0) {
+    $this->request->data = $this->Media->findDup('date', $query);
+    if (count($this->request->data) == 0) {
       $this->render('noduplicates');
     } else {
-      $this->Media->getMaster(&$this->data, 'views');
+      $this->Media->getMaster(&$this->request->data, 'views');
     }
   }
 
@@ -105,8 +105,8 @@ class DupfinderController extends DupfinderAppController
   function merge() {
     $data['master'] = 0;
     $data['copies'] = 0;
-    if (!empty($this->data)) {
-      foreach($this->data as $dupIndex => $duplicates) {
+    if (!empty($this->request->data)) {
+      foreach($this->request->data as $dupIndex => $duplicates) {
         // select master and copies of a duplicate set
         list($masterId, $copies) = $this->_findMasterAndCopies($duplicates['Dup']);
         list($fileMasterId, $fileCopies) = $this->_findMasterAndCopies($duplicates['File']);
@@ -179,7 +179,7 @@ class DupfinderController extends DupfinderAppController
         $data['master']++;
       }
     }
-    $this->data = $data;
+    $this->request->data = $data;
   }
 }
 ?>
